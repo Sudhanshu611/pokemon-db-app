@@ -10,7 +10,7 @@ A simple full-stack web application to manage a Pokémon database. Users can add
 - Persistent storage using SQLite
 
 ## Project Structure
-
+```sh
 pokemon-app/
 │
 ├── 📁 backend/
@@ -32,7 +32,7 @@ pokemon-app/
 ├── package.json               # Project dependencies and metadata
 ├── README.md                  # Project description and usage
 └── 📄 init.sql (optional)     # DB schema init file
-
+```
 
 ## Getting Started
 
