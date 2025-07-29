@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Database</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <form id="pokemon-form" class="poke-form">
+        <input type="text" id="pokemon-name" placeholder="Insert pokemon name">
+        <br>
+        <button type="submit" id="add-poke-btn">Add the pokemon</button>
+    </form>
+    <hr>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Sprite</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="poke-list">
+            <!-- JS will do this -->
+        </tbody>
+    </table>
+
+
+    <script>
+        const api_base_url = "https://pokeapi.co/api/v2/pokemon/";
+        document.getElementById('pokemon-form').onsubmit = addPokemonToDB;
+        
+        renderHTML();
+
+        // HTML Rendrer
+        async function renderHTML(){
+            const pokeList = document.getElementById('poke-list');
+            pokeList.innerHTML = '';
+            const data = await getPokemons();
+            let html = '';
+            data.forEach(pokemon => {
+            html += `<tr>
+                    <td>${pokemon.id}</td>
+                    <td>${pokemon.name}</td>
+                    <td>
+                        <img src="${pokemon.img_url}" alt="${pokemon.name}">
+                    </td>
+                    <td><button class="delete-btn" data-id="${pokemon.id}">Delete</button></td>
+                </tr>`
+            })
+            pokeList.innerHTML = html;
+            document.querySelectorAll('.delete-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    const id = btn.dataset.id;
+                    await deleteData(id);
+                })
+            })
+        }
+
+        // Delete a pokemon
+        async function deleteData(pokeId) {
+            const del = await fetch("/pokemon/" + pokeId , {
+                method: 'DELETE'
+            })
+            console.log(await del.json());
+            renderHTML();
+        }
+
+        // get all pokemon
+        async function getPokemons(){
+            const pokeDB = await fetch("/pokemon",{
+                method: 'GET',
+                headers: {
+                    'Content-Type' : 'application/json'
+                }
+            })
+            if (!pokeDB.ok) {
+                alert('Something went wrong')
+                return null;
+            }
+            return await pokeDB.json();
+        }
+        
+        // add pokemon
+        async function addPokemonToDB (e){
+            e.preventDefault();
+
+            try{
+                const data = await fetchPokemon();
+                const newData = await fetch("/pokemon",{
+                    method: 'POST',
+                    headers: { 'Content-Type' : 'application/json'},
+                    body : JSON.stringify({
+                        id: data.id,
+                        name: data.name,
+                        img_url: data.sprites.front_default
+                    })
+                })
+                if (newData.status === 409){
+                    alert('Pokemon already exists!!');
+                }
+                else{
+                    console.log(await newData.json());
+                }
+            }
+            catch(err){
+                console.log(err.message);
+            }
+            document.getElementById('pokemon-name').value = '';
+            renderHTML();
+        }
+        // fetch pokemon from api
+        async function fetchPokemon(){
+            const pokemonName = document.getElementById('pokemon-name');
+            const pokeNameVal = pokemonName.value;
+
+            if (!pokeNameVal) alert('No name was given!!');
+
+            try{
+                const response = await fetch(api_base_url+pokeNameVal);
+                if (!response.ok){
+                    alert('Pokemon not found');
+                    return null;
+                }
+                const data = await response.json();
+                return data;
+            }
+            catch (error){
+                console.log(error.message);
+                return null;
+            }
+            
+        }
+    </script>
+</body>
+</html>
